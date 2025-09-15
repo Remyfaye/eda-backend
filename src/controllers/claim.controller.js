@@ -1,3 +1,4 @@
+import Campaign from "../models/Campaign.js";
 import Claim from "../models/Claim.js";
 import { payUser } from "../services/treasury.service.js";
 import { getTreasury } from "../services/treasury.service.js";
@@ -8,16 +9,20 @@ async function submitClaim(req, res) {
       proofUrl: req.body.proofUrl,
     });
     if (existing) {
-      return res.status(401).json("you have already submited this claim");
+      return res.json({
+        status: 401,
+        msg: "you have already submited this claim",
+      });
     }
 
     if (!req.body.userId || !req.body.amount)
-      return res.status(401).json("User or amount not found");
+      return res.json({ status: "401", msg: "User or amount not found" });
 
     const newClaim = await Claim.create(req.body);
-    return res.status(201).json(newClaim);
+    res.json({ status: "200", data: newClaim });
   } catch (err) {
-    res.status(500).json(err.message);
+    res.json({ status: "500", msg: err.message });
+    throw new Error();
   }
 }
 
@@ -78,14 +83,21 @@ async function rejectClaim(req, res) {
   }
 }
 
-
 // already had submitClaim(), add new version w/ file upload
 export async function submitClaimWithFile(req, res) {
   try {
     const { userId, campaignId, taskType, amount } = req.body;
 
+    const existing = await Claim.findById({ userId, campaignId });
+    if (existing)
+      return res.json({
+        status: "401",
+        msg: "You have already submitted this claim",
+      });
     if (!userId || !amount) {
-      return res.status(400).json({ error: "userId and amount required" });
+      return res
+        .status(400)
+        .json({ status: "401", msg: "userId and amount required" });
     }
 
     let proofUrl = null;
@@ -98,13 +110,36 @@ export async function submitClaimWithFile(req, res) {
       campaignId,
       taskType,
       proofUrl,
-      amount
+      amount,
     });
 
-    res.json({ message: "Claim submitted", claim });
+    res.json({ status: "200", claim });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ status: "500", msg: err.message });
+  }
+}
+
+export async function getUserClaim(req, res) {
+  try {
+    const userClaims = await Claim.find({ userId: req.params.userId });
+
+    if (!userClaims || userClaims.length === 0) {
+      return res.json({ status: "400", msg: "No claims found" });
+    }
+
+    // Extract campaign IDs from claims
+    const campaignIds = userClaims.map((claim) => claim.campaignId);
+
+    // Fetch all related campaigns
+    const userCampaigns = await Campaign.find({ _id: { $in: campaignIds } });
+
+    res.json({
+      status: "200",
+      data: { claims: userClaims, campaigns: userCampaigns },
+    });
+  } catch (error) {
+    res.json({ status: "500", msg: error.message });
   }
 }
 
