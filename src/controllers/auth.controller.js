@@ -51,6 +51,7 @@ async function login(req, res) {
       status: "200",
       token,
       data: user,
+      msg: `welcome back ${user.name}`,
     });
   } catch (err) {
     res.status(500).json({ status: "500", error: err.message });
