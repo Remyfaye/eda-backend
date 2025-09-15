@@ -9,13 +9,15 @@ async function register(req, res) {
     if (existing) {
       return res
         .status(401)
-        .json({ status: "200", msg: "User Already exixts" });
+        .json({ status: "401", error: "User Already exixts" });
     }
     const custodialId = `cust_${nanoid(10)}`;
     const newUser = await User.create({ ...req.body, custodialId });
-    res.status(201).json({ status: "success", data: newUser });
+    res
+      .status(201)
+      .json({ status: "200", data: newUser, msg: "user Created Successfully" });
   } catch (err) {
-    res.status(500).json({ status: "failed", msg: err.message });
+    res.status(500).json({ status: "500", error: err.message });
     console.log(err.message);
   }
 }
@@ -27,7 +29,9 @@ async function login(req, res) {
     // console.log(user);
 
     if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res
+        .status(401)
+        .json({ status: "401", error: "Invalid email or password" });
     }
 
     // Replace this with your actual password check logic
@@ -44,12 +48,12 @@ async function login(req, res) {
     );
 
     res.status(200).json({
-      status: "success",
+      status: "200",
       token,
-      user,
+      data: user,
     });
   } catch (err) {
-    res.status(500).json({ status: "success", error: err.message });
+    res.status(500).json({ status: "500", error: err.message });
   }
 }
 

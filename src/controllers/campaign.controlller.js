@@ -4,9 +4,13 @@ export async function createCampaign(req, res) {
   try {
     const newCaimpagn = await Campaign.create(req.body);
 
-    res.json({ status: "200", data: newCaimpagn });
+    res.json({
+      status: "200",
+      data: newCaimpagn,
+      msg: "Your campaign has been created",
+    });
   } catch (error) {
-    res.json({ status: "500", msg: error.message });
+    res.json({ status: "500", error: error.message });
   }
 }
 

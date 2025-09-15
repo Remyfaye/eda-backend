@@ -11,17 +11,21 @@ async function submitClaim(req, res) {
     if (existing) {
       return res.json({
         status: 401,
-        msg: "you have already submited this claim",
+        error: "you have already submited this claim",
       });
     }
 
     if (!req.body.userId || !req.body.amount)
-      return res.json({ status: "401", msg: "User or amount not found" });
+      return res.json({ status: "401", error: "User or amount not found" });
 
     const newClaim = await Claim.create(req.body);
-    res.json({ status: "200", data: newClaim });
+    res.json({
+      status: "200",
+      data: newClaim,
+      msg: "Your claim has been submitted",
+    });
   } catch (err) {
-    res.json({ status: "500", msg: err.message });
+    res.json({ status: "500", error: err.message });
     throw new Error();
   }
 }
@@ -125,7 +129,7 @@ export async function getUserClaim(req, res) {
     const userClaims = await Claim.find({ userId: req.params.userId });
 
     if (!userClaims || userClaims.length === 0) {
-      return res.json({ status: "400", msg: "No claims found" });
+      return res.json({ status: "400", error: "No claims found" });
     }
 
     // Extract campaign IDs from claims
@@ -137,6 +141,7 @@ export async function getUserClaim(req, res) {
     res.json({
       status: "200",
       data: { claims: userClaims, campaigns: userCampaigns },
+      msg: "User Claims fetched",
     });
   } catch (error) {
     res.json({ status: "500", msg: error.message });

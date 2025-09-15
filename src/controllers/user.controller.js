@@ -26,9 +26,19 @@ const addWallet = async (req, res) => {
     );
     // console.log(user);
 
-    res.status(200).json(user);
+    if (!user)
+      return res
+        .status(401)
+        .json({ status: "401", error: "User does not exixts" });
+
+    res.status(200).json({
+      status: "200",
+      msg: "Wallet connected successfully",
+      data: user,
+    });
   } catch (error) {
     console.log(error);
+    res.status(200).json({ status: "500", msg: error.message });
   }
 };
 
